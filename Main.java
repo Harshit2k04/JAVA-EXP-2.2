@@ -1,118 +1,120 @@
-import java.util.*;
-import java.util.stream.*;
 import java.io.*;
+import java.util.*;
+
+class Student implements Serializable {
+    int studentID;
+    String name;
+    String grade;
+
+    Student(int studentID, String name, String grade) {
+        this.studentID = studentID;
+        this.name = name;
+        this.grade = grade;
+    }
+
+    public String toString() {
+        return studentID + " " + name + " " + grade;
+    }
+}
 
 class Employee {
     String name;
-    int age;
+    int id;
+    String designation;
     double salary;
 
-    Employee(String name, int age, double salary) {
+    Employee(String name, int id, String designation, double salary) {
         this.name = name;
-        this.age = age;
+        this.id = id;
+        this.designation = designation;
         this.salary = salary;
     }
 
     public String toString() {
-        return name + " " + age + " " + salary;
-    }
-}
-
-class Student {
-    String name;
-    int marks;
-
-    Student(String name, int marks) {
-        this.name = name;
-        this.marks = marks;
-    }
-
-    public String toString() {
-        return name + " " + marks;
-    }
-}
-
-class Product {
-    String name;
-    double price;
-    String category;
-
-    Product(String name, double price, String category) {
-        this.name = name;
-        this.price = price;
-        this.category = category;
-    }
-
-    public String toString() {
-        return name + " " + price + " " + category;
+        return id + " " + name + " " + designation + " " + salary;
     }
 }
 
 public class Main {
-    public static void main(String[] args) {
+    static final String EMP_FILE = "employees.txt";
+    static final String STUD_FILE = "student.ser";
+
+    public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
         while (true) {
             System.out.println("\nMain Menu");
-            System.out.println("1. Sort Employees (Lambda)");
-            System.out.println("2. Filter & Sort Students (Streams)");
-            System.out.println("3. Process Products (Streams)");
+            System.out.println("1. Sum of Integers (Autoboxing)");
+            System.out.println("2. Student Serialization");
+            System.out.println("3. Employee Management");
             System.out.println("4. Exit");
             int choice = sc.nextInt();
-            if (choice == 1) employeeSorting();
-            else if (choice == 2) studentFiltering();
-            else if (choice == 3) productProcessing();
+            if (choice == 1) sumOfIntegers(sc);
+            else if (choice == 2) studentSerialization(sc);
+            else if (choice == 3) employeeManagement(sc);
             else if (choice == 4) break;
         }
     }
 
-    static void employeeSorting() {
-        List<Employee> employees = Arrays.asList(
-            new Employee("Alice", 30, 50000),
-            new Employee("Bob", 25, 60000),
-            new Employee("Charlie", 35, 55000)
-        );
-        System.out.println("\nSort by Name:");
-        employees.stream().sorted((e1, e2) -> e1.name.compareTo(e2.name)).forEach(System.out::println);
-        System.out.println("\nSort by Age:");
-        employees.stream().sorted((e1, e2) -> Integer.compare(e1.age, e2.age)).forEach(System.out::println);
-        System.out.println("\nSort by Salary (Descending):");
-        employees.stream().sorted((e1, e2) -> Double.compare(e2.salary, e1.salary)).forEach(System.out::println);
+    static void sumOfIntegers(Scanner sc) {
+        ArrayList<Integer> numbers = new ArrayList<>();
+        System.out.println("Enter integers (type 'end' to stop):");
+        while (true) {
+            String input = sc.next();
+            if (input.equalsIgnoreCase("end")) break;
+            numbers.add(Integer.parseInt(input));
+        }
+        int sum = 0;
+        for (Integer n : numbers) sum += n;
+        System.out.println("Sum = " + sum);
     }
 
-    static void studentFiltering() {
-        List<Student> students = Arrays.asList(
-            new Student("Aniketh", 80),
-            new Student("Maya", 72),
-            new Student("Ravi", 90),
-            new Student("Sara", 65)
-        );
-        System.out.println("\nStudents with marks > 75 sorted by marks:");
-        students.stream()
-            .filter(s -> s.marks > 75)
-            .sorted((s1, s2) -> Integer.compare(s1.marks, s2.marks))
-            .map(s -> s.name)
-            .forEach(System.out::println);
+    static void studentSerialization(Scanner sc) throws Exception {
+        System.out.print("Enter Student ID: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Enter Name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter Grade: ");
+        String grade = sc.nextLine();
+        Student s = new Student(id, name, grade);
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(STUD_FILE));
+        out.writeObject(s);
+        out.close();
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream(STUD_FILE));
+        Student st = (Student) in.readObject();
+        in.close();
+        System.out.println("Deserialized Student: " + st);
     }
 
-    static void productProcessing() {
-        List<Product> products = Arrays.asList(
-            new Product("Laptop", 80000, "Electronics"),
-            new Product("Phone", 60000, "Electronics"),
-            new Product("Shirt", 2000, "Clothing"),
-            new Product("Jeans", 3000, "Clothing"),
-            new Product("Fridge", 40000, "Appliances"),
-            new Product("Oven", 15000, "Appliances")
-        );
-        System.out.println("\nGroup by Category:");
-        Map<String, List<Product>> grouped = products.stream().collect(Collectors.groupingBy(p -> p.category));
-        grouped.forEach((cat, list) -> {
-            System.out.println(cat + " -> " + list);
-        });
-        System.out.println("\nMost Expensive Product in Each Category:");
-        Map<String, Optional<Product>> maxByCategory = products.stream()
-            .collect(Collectors.groupingBy(p -> p.category, Collectors.maxBy(Comparator.comparingDouble(p -> p.price))));
-        maxByCategory.forEach((cat, prod) -> System.out.println(cat + " -> " + prod.get()));
-        double avgPrice = products.stream().collect(Collectors.averagingDouble(p -> p.price));
-        System.out.println("\nAverage Price of All Products: " + avgPrice);
+    static void employeeManagement(Scanner sc) throws Exception {
+        while (true) {
+            System.out.println("\nEmployee Menu");
+            System.out.println("1. Add Employee");
+            System.out.println("2. Display Employees");
+            System.out.println("3. Back");
+            int choice = sc.nextInt();
+            if (choice == 1) {
+                sc.nextLine();
+                System.out.print("Name: ");
+                String name = sc.nextLine();
+                System.out.print("ID: ");
+                int id = sc.nextInt();
+                sc.nextLine();
+                System.out.print("Designation: ");
+                String designation = sc.nextLine();
+                System.out.print("Salary: ");
+                double salary = sc.nextDouble();
+                Employee e = new Employee(name, id, designation, salary);
+                BufferedWriter bw = new BufferedWriter(new FileWriter(EMP_FILE, true));
+                bw.write(e.toString());
+                bw.newLine();
+                bw.close();
+            } else if (choice == 2) {
+                BufferedReader br = new BufferedReader(new FileReader(EMP_FILE));
+                String line;
+                while ((line = br.readLine()) != null) System.out.println(line);
+                br.close();
+            } else if (choice == 3) break;
+        }
     }
 }
